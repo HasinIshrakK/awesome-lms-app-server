@@ -14,17 +14,24 @@ router.get("/", async (req, res) => {
     };
 
 });
+
 router.get("/:id", async (req, res) => {
   try {
     const { db } = await connectDB();
     const courseId = req.params.id;
 
-    const course = await db
-      .collection("courses")
-      .findOne({ _id: courseId }); // <-- query as string
+    let course = null;
+
+    if (ObjectId.isValid(courseId)) {
+      course = await db.collection("courses").findOne({ _id: new ObjectId(courseId) });
+    }
 
     if (!course) {
-      return res.status(404).json({ message: "Course not found" });
+      course = await db.collection("courses").findOne({ _id: courseId });
+    }
+
+    if (!course) {
+      return res.status(404).json({ message: `Course not found for ID: ${courseId}` });
     }
 
     res.json(course);
@@ -32,6 +39,7 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 export default router;
